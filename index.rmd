@@ -1,0 +1,100 @@
+---
+title: "Tables Assignment"
+author: "William Roloff"
+date: "2022-10-12"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+For this assignment I used a data set consisting of NBA player data, which I also used on the first two assignments.  I am presenting information specifically on 3-point shooting and how those numbers have changed over the years.  This table is filtered to include only players that took greater than 150 3-point shots in a season and made at least 40% of those shots.  The 3-point shot was introduced in 1980, and one of my goals with this table is to show how rare it was for a player to shoot a high volume and percentage of 3-pointers in the 80s compared to how commonplace it is in recent seasons.  The table is quite long, so I included fixed headers, and I enabled highlighting of rows to ensure that it's easier to keep track of the data as the user is scrolling.
+
+```{r}
+nba_stats <- read.csv("nba stats csv.csv")
+
+
+
+library(tidyverse)
+library(knitr)
+#first5 <- head((nba_stats), n=5)
+#kable(first5)
+
+library(kableExtra)
+#kbl(first5)
+```
+
+
+```{r}
+#tbl_first5 <- first5 %>% 
+#  select(Year, Player, X3P, X3PA, X3P., USG., WS) %>%
+#  kbl(col.names = c("Year",
+#                    "Player",
+#                    "3-point Makes",
+#                    "3-point Attempts",
+#                    "3-point Percentage",
+#                    "Usage Rate",
+#                    "Win Shares"))  %>%
+#  kable_styling(font_size=18)
+
+#tbl_first5
+```
+
+
+```{r}
+nba_data_3 <- subset(nba_stats, Year>1979)
+nba_data_3_attempts <- subset(nba_data_3, X3PA>150)
+nba_data_3_top <- subset(nba_data_3_attempts, X3P.>.4)
+#head(nba_data_3_top)
+```
+
+
+```{r}
+averages <- nba_data_3 %>%
+  group_by(Year) %>%
+  summarise_each(funs(mean))
+
+#averages
+```
+
+
+```{r}
+averages_simple <- averages %>%
+                      mutate('X3P.' = X3P/X3PA)
+
+#averages_simple
+
+three_averages <- subset(averages_simple, select = c('Year', 'X3PA', 'X3P.'))
+three_averages_names <- rename(three_averages, 'X3PA.mean' = X3PA, 'X3P.mean' = X3P.)
+#head(three_averages_names)
+```
+```{r}
+nba_data_3_w_avg <- right_join(three_averages_names, nba_data_3_top)
+#head(nba_data_3_w_avg)
+```
+
+
+```{r}
+tbl_3data <- nba_data_3_w_avg %>% 
+  select(Year, Player, X3P, X3PA, X3PA.mean, X3P., X3P.mean) %>%
+  kbl(col.names = c("Year",
+                    "Player",
+                    "3-point Makes",
+                    "3-point Attempts",
+                    "Average Attempts for that Year",
+                    "3-point Percentage",
+                    "Average 3-point Percentage for that Year"))  %>%
+  kable_styling(font_size=18)
+
+#tbl_3data
+```
+
+```{r}
+tbl_3data %>%
+  kable_paper(lightable_options = "hover", full_width = FALSE) %>%
+  kable_styling(fixed_thead = TRUE)
+```
+
+
+
